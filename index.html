@@ -3,39 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <title>Krish Fast Food - QR Menu</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <style>
-        body { font-family: Arial; margin: 20px; }
-        .card { border: 1px solid #ddd; padding: 12px; margin: 10px; border-radius: 10px; width: 260px; display: inline-block; vertical-align: top; }
-        .name { font-weight: bold; font-size: 18px; }
+        body { 
+            font-family: Arial; 
+            margin: 0; 
+            padding: 10px;
+            background: #f7f7f7;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .item-card {
+            background: white;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .name { font-size: 18px; font-weight: bold; }
         .price { color: green; font-size: 16px; }
-        button { padding: 10px 22px; background: #03c26f; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        input[type="number"] { width: 50px; }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #03c26f;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        input[type="number"], input[type="text"] {
+            padding: 8px;
+            width: 100%;
+            margin-top: 6px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .qty-row {
+            margin-top: 8px;
+        }
     </style>
 </head>
 
 <body>
 
-<h2>🍽 Krish Fast Food – Quick QR Menu</h2>
+<div class="container">
+
+<h2>🍽 Krish Fast Food – QR Menu</h2>
 
 <div id="menu"></div>
 
-<p>
-<b>Your Name:</b><br>
-<input id="name" style="padding:8px;width:250px;">
-</p>
+<p><b>Your Name:</b>
+<input id="name"></p>
 
-<p>
-<b>Table / Delivery:</b><br>
-<input id="table" style="padding:8px;width:250px;">
-</p>
+<p><b>Table / Delivery:</b>
+<input id="table"></p>
 
 <h3 id="total">Total: ₹0</h3>
 
 <button onclick="placeOrder()">Order on WhatsApp</button>
 
+</div>
+
 <script>
 
-const phoneNumber = "919373606511";  
+const API_KEY = "956539c8c9e7053902668964f579be06"; 
+const phoneNumber = "919373606511"; 
 const shopName = "Krish Fast Food";
 
 const items = [
@@ -51,12 +94,14 @@ function loadMenu() {
     let html = "";
     items.forEach(i => {
         html += `
-        <div class='card'>
-            <div class='name'>${i.name}</div>
-            <div class='price'>₹${i.price}</div>
-            <label><input type="checkbox" onchange="toggleItem('${i.id}')"> Add</label>
-            <br><br>
-            Qty: <input id="qty_${i.id}" type="number" value="1" min="1" onchange="updateTotal()">
+        <div class="item-card">
+            <div class="name">${i.name}</div>
+            <div class="price">₹${i.price}</div>
+            <div class="qty-row">
+                <label><input type="checkbox" onchange="toggleItem('${i.id}')"> Add</label>
+                <br>
+                Qty: <input id="qty_${i.id}" type="number" value="1" min="1" onchange="updateTotal()">
+            </div>
         </div>`;
     });
     document.getElementById("menu").innerHTML = html;
@@ -79,7 +124,60 @@ function updateTotal() {
     document.getElementById("total").innerHTML = "Total: ₹" + total;
 }
 
-function placeOrder(){
+function generateBillImage(ordered, name, table, orderId) {
+    return new Promise(resolve => {
+
+        let bill = `${shopName}\nOrder ID: #${orderId}\n`;
+        bill += `Customer: ${name}\nTable/Delivery: ${table}\n\n`;
+        bill += "Items:\n";
+
+        let totalAmount = 0;
+
+        ordered.forEach(i=>{
+            let qty = document.getElementById("qty_"+i.id).value;
+            let lineTotal = qty * i.price;
+            bill += `${i.name} (x${qty}) - ₹${lineTotal}\n`;
+            totalAmount += lineTotal;
+        });
+
+        bill += `\nTotal Amount: ₹${totalAmount}`;
+
+        let canvas = document.createElement("canvas");
+        canvas.width = 900;
+        canvas.height = 700;
+
+        let ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0,0,900,700);
+
+        ctx.fillStyle = "#000000";
+        ctx.font = "26px Arial";
+
+        let y = 40;
+        bill.split("\n").forEach(line=>{
+            ctx.fillText(line, 20, y);
+            y += 40;
+        });
+
+        resolve(canvas.toDataURL("image/png"));
+    });
+}
+
+async function uploadToImgBB(base64Image){
+    let formData = new FormData();
+    formData.append("key", API_KEY);
+    formData.append("image", base64Image.split(",")[1]);
+
+    let res = await fetch("https://api.imgbb.com/1/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    let json = await res.json();
+    return json.data.url;
+}
+
+async function placeOrder(){
 
     let name = document.getElementById("name").value.trim();
     let table = document.getElementById("table").value.trim();
@@ -91,64 +189,35 @@ function placeOrder(){
 
     let ordered = items.filter(i=>selected[i.id]);
     if(ordered.length == 0){
-        alert("Please select at least one item.");
+        alert("Select at least one item.");
         return;
     }
 
-    // ------ CREATE ORDER ID ------
-    const orderId = Math.floor(10000 + Math.random()*90000);
+    let orderId = Math.floor(10000 + Math.random()*90000);
 
-    // ------ CREATE BILL TEXT ------
-    let bill = `${shopName}\nOrder ID: #${orderId}\n`;
-    bill += `Customer: ${name}\nTable/Delivery: ${table}\n\n`;
-    bill += "Items:\n";
+    let billImage = await generateBillImage(ordered, name, table, orderId);
 
-    let totalAmount = 0;
+    let imageURL = await uploadToImgBB(billImage);
+
+    let orderText = `*${shopName}*\nOrder ID: #${orderId}\n\n`;
 
     ordered.forEach(i=>{
         let qty = document.getElementById("qty_"+i.id).value;
-        let lineTotal = qty * i.price;
-        bill += `${i.name} (x${qty}) - ₹${lineTotal}\n`;
-        totalAmount += lineTotal;
+        orderText += `${i.name} x${qty} - ₹${i.price * qty}\n`;
     });
 
-    bill += `\nTotal Amount: ₹${totalAmount}`;
+    orderText += `\nCustomer: ${name}\nTable: ${table}\n`;
+    orderText += `\nBill Image:\n${imageURL}`;
 
-    // ------ GENERATE BILL IMAGE ------
-    let canvas = document.createElement("canvas");
-    canvas.width = 900;
-    canvas.height = 700;
+    let whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(orderText)}`;
 
-    let ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0,0,900,700);
-
-    ctx.fillStyle = "#000000";
-    ctx.font = "26px Arial";
-
-    let y = 40;
-    bill.split("\n").forEach(line=>{
-        ctx.fillText(line, 20, y);
-        y += 40;
-    });
-
-    let billImage = canvas.toDataURL("image/png");
-
-    // ---- Auto Download Bill ----
-    let a = document.createElement("a");
-    a.href = billImage;
-    a.download = "Order-Bill.png";
-    a.click();
-
-    // ----- SEND WHATSAPP MESSAGE -----
-    let message = `Order ID: #${orderId}%0AName: ${name}%0ATable: ${table}%0ABill Image Attached.`;
-
-    window.open(`https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`, "_blank");
+    window.open(whatsappURL, "_blank");
 }
 
 </script>
 
 </body>
 </html>
+
 
 
