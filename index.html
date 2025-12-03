@@ -112,28 +112,80 @@ function updateCart(){
   totalEl.innerText = totalPrice;
 }
 
-function placeOrder(){
-  let msg = "New Order:%0A%0AItems:%0A";
-  let empty = true;
-  document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-    if(cb.checked){
-      empty = false;
-      const id = cb.getAttribute('data-id');
-      const q = parseInt(document.querySelector('.qty[data-id="'+id+'"]').value);
-      const it = items.find(x=>x.id===id);
-      msg += `${it.name} x ${q} = ₹${q*it.price}%0A`;
+function placeOrder() {
+    const table = document.getElementById("table").value.trim();
+    const name = document.getElementById("name").value.trim();
+    if (!table || !name) {
+        alert("Please enter Name and Table/Delivery information.");
+        return;
     }
-  });
-  if(empty){ alert("Please select at least 1 item."); return; }
-  msg += `%0ATotal: ₹${totalEl.innerText}`;
-  msg += `%0ATable: ${tableInput.value || "____"}`;
-  msg += `%0AName: ${nameInput.value || "____"}`;
-  const link = `https://wa.me/${phoneNumber}?text=${msg}`;
-  window.open(link, "_blank");
+
+    let ordered = items.filter(i => selectedItems[i.id]);
+    if (ordered.length === 0) {
+        alert("Please select at least one item.");
+        return;
+    }
+
+    // Generate Order ID
+    const orderId = Math.floor(10000 + Math.random() * 90000);
+
+    // Prepare BILL TEXT for image
+    let billText = "Order ID: #" + orderId + "\n";
+    billText += "Customer: " + name + "\n";
+    billText += "Table/Delivery: " + table + "\n\n";
+    billText += "Items:\n";
+
+    let totalAmount = 0;
+    ordered.forEach(i => {
+        let qty = selectedItems[i.id];
+        let line = `${i.name} (x${qty}) - ₹${i.price * qty}`;
+        billText += line + "\n";
+        totalAmount += i.price * qty;
+    });
+
+    billText += "\nTotal Amount: ₹" + totalAmount;
+
+    // CREATE IMAGE CANVAS
+    let canvas = document.createElement("canvas");
+    let ctx = canvas.getContext("2d");
+    canvas.width = 800;
+    canvas.height = 600;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#000000";
+    ctx.font = "28px Arial";
+
+    let y = 40;
+    billText.split("\n").forEach(line => {
+        ctx.fillText(line, 20, y);
+        y += 40;
+    });
+
+    // Convert canvas to image
+    let billImageURL = canvas.toDataURL("image/png");
+
+    // AUTO DOWNLOAD BILL IMAGE
+    let link = document.createElement("a");
+    link.download = "Order-Bill.png";
+    link.href = billImageURL;
+    link.click();
+
+    // SEND SIMPLE MESSAGE ON WHATSAPP (UNEDITABLE BILL IS IN IMAGE)
+    let message = `Order ID: #${orderId}%0A` +
+                  `Name: ${name}%0A` +
+                  `Table: ${table}%0A` +
+                  `Bill Image Attached.%0A`;
+
+    let whatsappURL = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
+    window.open(whatsappURL, "_blank");
 }
+
 
 renderMenu();
 </script>
 </body>
 </html>
+
 
