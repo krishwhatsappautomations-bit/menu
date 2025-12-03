@@ -1,190 +1,153 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Quick QR Menu — Order on WhatsApp</title>
-<style>
-  :root{--accent:#0f9d58;--muted:#666;--card:#fff}
-  *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
-  body{margin:0;background:#f4f6f8;color:#111;padding:12px}
-  .wrap{max-width:760px;margin:0 auto}
-  header{padding:8px 0}
-  h1{font-size:20px;margin:0}
-  p.lead{margin:6px 0 14px;color:var(--muted);font-size:14px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-  .card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-  .item-title{font-weight:600;margin:0 0 6px}
-  .price{color:var(--accent);font-weight:700}
-  .desc{color:var(--muted);font-size:13px;margin:6px 0 10px}
-  .controls{display:flex;gap:8px;align-items:center}
-  .qty{width:56px;padding:6px;border-radius:6px;border:1px solid #e4e6ea;text-align:center}
-  button.btn{background:var(--accent);color:#fff;border:0;padding:10px 12px;border-radius:8px;font-weight:700}
-  .bottom{position:sticky;bottom:12px;left:0;right:0;padding:8px;text-align:center}
-  .cart-summary{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
-  .small{font-size:13px;color:var(--muted)}
-  label{display:flex;gap:8px;align-items:center}
-  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-</style>
+    <meta charset="UTF-8">
+    <title>Krish Fast Food - QR Menu</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .card { border: 1px solid #ddd; padding: 12px; margin: 10px; border-radius: 10px; width: 260px; display: inline-block; vertical-align: top; }
+        .name { font-weight: bold; font-size: 18px; }
+        .price { color: green; font-size: 16px; }
+        button { padding: 10px 22px; background: #03c26f; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        input[type="number"] { width: 50px; }
+    </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <h1>🍽 Quick QR Menu</h1>
-      <p class="lead">Select items, adjust quantity, then tap <strong>Order on WhatsApp</strong>.</p>
-    </header>
 
-    <div id="menu" class="grid"></div>
+<h2>🍽 Krish Fast Food – Quick QR Menu</h2>
 
-    <div class="card" style="margin:12px 0;">
-      <input id="tableInput" placeholder="Table / Delivery (e.g. Table 3 or Home)" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
-      <input id="nameInput" placeholder="Your Name" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;margin-top:8px">
-    </div>
+<div id="menu"></div>
 
-    <div class="bottom">
-      <div class="card">
-        <div class="cart-summary">
-          <div>
-            <div class="small">Items selected: <span id="count">0</span></div>
-            <div class="small">Total: ₹<span id="total">0</span></div>
-          </div>
-          <div>
-            <button id="orderBtn" class="btn" onclick="placeOrder()">Order on WhatsApp</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+<p>
+<b>Your Name:</b><br>
+<input id="name" style="padding:8px;width:250px;">
+</p>
+
+<p>
+<b>Table / Delivery:</b><br>
+<input id="table" style="padding:8px;width:250px;">
+</p>
+
+<h3 id="total">Total: ₹0</h3>
+
+<button onclick="placeOrder()">Order on WhatsApp</button>
 
 <script>
-/* ====== EDIT ONLY THIS NUMBER ====== */
-const phoneNumber = "919373606511"; // <- REPLACE with restaurant phone
 
-/* ====== MENU ITEMS ====== */
+const phoneNumber = "919373606511";  
+const shopName = "Krish Fast Food";
+
 const items = [
-  {id:"1", category:"Pizza", name:"Margherita Pizza", price:129, desc:"Classic cheese pizza"},
-  {id:"2", category:"Pizza", name:"Paneer Tikka Pizza", price:229, desc:"Paneer, onion, capsicum"},
-  {id:"3", category:"Burger", name:"Veg Burger", price:69, desc:"Veg patty + mayo"},
-  {id:"4", category:"Drinks", name:"Cold Coffee", price:79, desc:"Chilled & refreshing"}
+    {id:"1", name:"Margherita Pizza", price:129},
+    {id:"2", name:"Paneer Tikka Pizza", price:229},
+    {id:"3", name:"Veg Burger", price:69},
+    {id:"4", name:"Cold Coffee", price:79}
 ];
 
-/* ====== CODE BELOW DO NOT EDIT ====== */
-const menuEl = document.getElementById('menu');
-const countEl = document.getElementById('count');
-const totalEl = document.getElementById('total');
-const tableInput = document.getElementById('tableInput');
-const nameInput = document.getElementById('nameInput');
+let selected = {};
 
-function renderMenu(){
-  menuEl.innerHTML = '';
-  items.forEach((it,i)=>{
-    const card = document.createElement('div'); card.className='card';
-    card.innerHTML = `
-      <div class="item-title">${it.name} <span class="price">₹${it.price}</span></div>
-      <div class="desc">${it.desc || ''}</div>
-      <div class="controls">
-        <label><input type="checkbox" data-id="${it.id}"> Add</label>
-        <input class="qty" type="number" min="1" value="1" data-id="${it.id}">
-      </div>
-    `;
-    menuEl.appendChild(card);
-  });
-  attachEvents();
+function loadMenu() {
+    let html = "";
+    items.forEach(i => {
+        html += `
+        <div class='card'>
+            <div class='name'>${i.name}</div>
+            <div class='price'>₹${i.price}</div>
+            <label><input type="checkbox" onchange="toggleItem('${i.id}')"> Add</label>
+            <br><br>
+            Qty: <input id="qty_${i.id}" type="number" value="1" min="1" onchange="updateTotal()">
+        </div>`;
+    });
+    document.getElementById("menu").innerHTML = html;
+}
+loadMenu();
+
+function toggleItem(id){
+    selected[id] = document.querySelector(`input[onchange="toggleItem('${id}')"]`).checked;
+    updateTotal();
 }
 
-function attachEvents(){
-  document.querySelectorAll('input[type=checkbox]').forEach(cb=> cb.onchange = ()=>updateCart());
-  document.querySelectorAll('.qty').forEach(q=> q.oninput = ()=>updateCart());
+function updateTotal() {
+    let total = 0;
+    items.forEach(i=>{
+        if(selected[i.id]){
+            let qty = parseInt(document.getElementById("qty_"+i.id).value);
+            total += qty * i.price;
+        }
+    });
+    document.getElementById("total").innerHTML = "Total: ₹" + total;
 }
 
-function updateCart(){
-  let totalQty = 0, totalPrice = 0;
-  document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-    if(cb.checked){
-      const id = cb.getAttribute('data-id');
-      const q = parseInt(document.querySelector('.qty[data-id="'+id+'"]').value);
-      const it = items.find(x=>x.id===id);
-      totalQty += q;
-      totalPrice += q * it.price;
-    }
-  });
-  countEl.innerText = totalQty;
-  totalEl.innerText = totalPrice;
-}
+function placeOrder(){
 
-function placeOrder() {
-    const table = document.getElementById("table").value.trim();
-    const name = document.getElementById("name").value.trim();
-    if (!table || !name) {
-        alert("Please enter Name and Table/Delivery information.");
+    let name = document.getElementById("name").value.trim();
+    let table = document.getElementById("table").value.trim();
+
+    if(name=="" || table==""){
+        alert("Please enter Name and Table/Delivery info.");
         return;
     }
 
-    let ordered = items.filter(i => selectedItems[i.id]);
-    if (ordered.length === 0) {
+    let ordered = items.filter(i=>selected[i.id]);
+    if(ordered.length == 0){
         alert("Please select at least one item.");
         return;
     }
 
-    // Generate Order ID
-    const orderId = Math.floor(10000 + Math.random() * 90000);
+    // ------ CREATE ORDER ID ------
+    const orderId = Math.floor(10000 + Math.random()*90000);
 
-    // Prepare BILL TEXT for image
-    let billText = "Order ID: #" + orderId + "\n";
-    billText += "Customer: " + name + "\n";
-    billText += "Table/Delivery: " + table + "\n\n";
-    billText += "Items:\n";
+    // ------ CREATE BILL TEXT ------
+    let bill = `${shopName}\nOrder ID: #${orderId}\n`;
+    bill += `Customer: ${name}\nTable/Delivery: ${table}\n\n`;
+    bill += "Items:\n";
 
     let totalAmount = 0;
-    ordered.forEach(i => {
-        let qty = selectedItems[i.id];
-        let line = `${i.name} (x${qty}) - ₹${i.price * qty}`;
-        billText += line + "\n";
-        totalAmount += i.price * qty;
+
+    ordered.forEach(i=>{
+        let qty = document.getElementById("qty_"+i.id).value;
+        let lineTotal = qty * i.price;
+        bill += `${i.name} (x${qty}) - ₹${lineTotal}\n`;
+        totalAmount += lineTotal;
     });
 
-    billText += "\nTotal Amount: ₹" + totalAmount;
+    bill += `\nTotal Amount: ₹${totalAmount}`;
 
-    // CREATE IMAGE CANVAS
+    // ------ GENERATE BILL IMAGE ------
     let canvas = document.createElement("canvas");
-    let ctx = canvas.getContext("2d");
-    canvas.width = 800;
-    canvas.height = 600;
+    canvas.width = 900;
+    canvas.height = 700;
 
+    let ctx = canvas.getContext("2d");
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0,0,900,700);
 
     ctx.fillStyle = "#000000";
-    ctx.font = "28px Arial";
+    ctx.font = "26px Arial";
 
     let y = 40;
-    billText.split("\n").forEach(line => {
+    bill.split("\n").forEach(line=>{
         ctx.fillText(line, 20, y);
         y += 40;
     });
 
-    // Convert canvas to image
-    let billImageURL = canvas.toDataURL("image/png");
+    let billImage = canvas.toDataURL("image/png");
 
-    // AUTO DOWNLOAD BILL IMAGE
-    let link = document.createElement("a");
-    link.download = "Order-Bill.png";
-    link.href = billImageURL;
-    link.click();
+    // ---- Auto Download Bill ----
+    let a = document.createElement("a");
+    a.href = billImage;
+    a.download = "Order-Bill.png";
+    a.click();
 
-    // SEND SIMPLE MESSAGE ON WHATSAPP (UNEDITABLE BILL IS IN IMAGE)
-    let message = `Order ID: #${orderId}%0A` +
-                  `Name: ${name}%0A` +
-                  `Table: ${table}%0A` +
-                  `Bill Image Attached.%0A`;
+    // ----- SEND WHATSAPP MESSAGE -----
+    let message = `Order ID: #${orderId}%0AName: ${name}%0ATable: ${table}%0ABill Image Attached.`;
 
-    let whatsappURL = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
-    window.open(whatsappURL, "_blank");
+    window.open(`https://api.whatsapp.com/send?phone=${phoneNumber}&text=${message}`, "_blank");
 }
 
-
-renderMenu();
 </script>
+
 </body>
 </html>
 
