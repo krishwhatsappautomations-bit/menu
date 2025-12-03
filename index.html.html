@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Quick QR Menu — Order on WhatsApp</title>
+<style>
+  :root{--accent:#0f9d58;--muted:#666;--card:#fff}
+  *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+  body{margin:0;background:#f4f6f8;color:#111;padding:12px}
+  .wrap{max-width:760px;margin:0 auto}
+  header{padding:8px 0}
+  h1{font-size:20px;margin:0}
+  p.lead{margin:6px 0 14px;color:var(--muted);font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .item-title{font-weight:600;margin:0 0 6px}
+  .price{color:var(--accent);font-weight:700}
+  .desc{color:var(--muted);font-size:13px;margin:6px 0 10px}
+  .controls{display:flex;gap:8px;align-items:center}
+  .qty{width:56px;padding:6px;border-radius:6px;border:1px solid #e4e6ea;text-align:center}
+  button.btn{background:var(--accent);color:#fff;border:0;padding:10px 12px;border-radius:8px;font-weight:700}
+  .bottom{position:sticky;bottom:12px;left:0;right:0;padding:8px;text-align:center}
+  .cart-summary{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+  .small{font-size:13px;color:var(--muted)}
+  label{display:flex;gap:8px;align-items:center}
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>🍽 Quick QR Menu</h1>
+      <p class="lead">Select items, adjust quantity, then tap <strong>Order on WhatsApp</strong>.</p>
+    </header>
+
+    <div id="menu" class="grid"></div>
+
+    <div class="card" style="margin:12px 0;">
+      <input id="tableInput" placeholder="Table / Delivery (e.g. Table 3 or Home)" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd">
+      <input id="nameInput" placeholder="Your Name" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;margin-top:8px">
+    </div>
+
+    <div class="bottom">
+      <div class="card">
+        <div class="cart-summary">
+          <div>
+            <div class="small">Items selected: <span id="count">0</span></div>
+            <div class="small">Total: ₹<span id="total">0</span></div>
+          </div>
+          <div>
+            <button id="orderBtn" class="btn" onclick="placeOrder()">Order on WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ====== EDIT ONLY THIS NUMBER ====== */
+const phoneNumber = "91XXXXXXXXXX"; // <- REPLACE with restaurant phone
+
+/* ====== MENU ITEMS ====== */
+const items = [
+  {id:"1", category:"Pizza", name:"Margherita Pizza", price:129, desc:"Classic cheese pizza"},
+  {id:"2", category:"Pizza", name:"Paneer Tikka Pizza", price:229, desc:"Paneer, onion, capsicum"},
+  {id:"3", category:"Burger", name:"Veg Burger", price:69, desc:"Veg patty + mayo"},
+  {id:"4", category:"Drinks", name:"Cold Coffee", price:79, desc:"Chilled & refreshing"}
+];
+
+/* ====== CODE BELOW DO NOT EDIT ====== */
+const menuEl = document.getElementById('menu');
+const countEl = document.getElementById('count');
+const totalEl = document.getElementById('total');
+const tableInput = document.getElementById('tableInput');
+const nameInput = document.getElementById('nameInput');
+
+function renderMenu(){
+  menuEl.innerHTML = '';
+  items.forEach((it,i)=>{
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `
+      <div class="item-title">${it.name} <span class="price">₹${it.price}</span></div>
+      <div class="desc">${it.desc || ''}</div>
+      <div class="controls">
+        <label><input type="checkbox" data-id="${it.id}"> Add</label>
+        <input class="qty" type="number" min="1" value="1" data-id="${it.id}">
+      </div>
+    `;
+    menuEl.appendChild(card);
+  });
+  attachEvents();
+}
+
+function attachEvents(){
+  document.querySelectorAll('input[type=checkbox]').forEach(cb=> cb.onchange = ()=>updateCart());
+  document.querySelectorAll('.qty').forEach(q=> q.oninput = ()=>updateCart());
+}
+
+function updateCart(){
+  let totalQty = 0, totalPrice = 0;
+  document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    if(cb.checked){
+      const id = cb.getAttribute('data-id');
+      const q = parseInt(document.querySelector('.qty[data-id="'+id+'"]').value);
+      const it = items.find(x=>x.id===id);
+      totalQty += q;
+      totalPrice += q * it.price;
+    }
+  });
+  countEl.innerText = totalQty;
+  totalEl.innerText = totalPrice;
+}
+
+function placeOrder(){
+  let msg = "New Order:%0A%0AItems:%0A";
+  let empty = true;
+  document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    if(cb.checked){
+      empty = false;
+      const id = cb.getAttribute('data-id');
+      const q = parseInt(document.querySelector('.qty[data-id="'+id+'"]').value);
+      const it = items.find(x=>x.id===id);
+      msg += `${it.name} x ${q} = ₹${q*it.price}%0A`;
+    }
+  });
+  if(empty){ alert("Please select at least 1 item."); return; }
+  msg += `%0ATotal: ₹${totalEl.innerText}`;
+  msg += `%0ATable: ${tableInput.value || "____"}`;
+  msg += `%0AName: ${nameInput.value || "____"}`;
+  const link = `https://wa.me/${phoneNumber}?text=${msg}`;
+  window.open(link, "_blank");
+}
+
+renderMenu();
+</script>
+</body>
+</html>
