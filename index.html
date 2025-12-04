@@ -290,7 +290,7 @@
         const url = URL.createObjectURL(f);
         const thumb = document.getElementById('thumb'); thumb.src = url; thumb.style.display='block';
         // upload to ImgBB
-        if(IMGBB_API_KEY && IMGBB_API_KEY !== 'YOUR_IMGBB_API_KEY_HERE'){
+        if(IMGBB_API_KEY && IMGBB_API_KEY !== '956539c8c9e7053902668964f579be06'){
           await uploadImageToImgBB(f);
         } else {
           document.getElementById('upload-status').innerText = 'Set your ImgBB API key in the code to enable upload. Selected image shown locally only.';
@@ -325,3 +325,4 @@
   -->
 </body>
 </html>
+
