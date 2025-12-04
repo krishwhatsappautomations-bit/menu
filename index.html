@@ -12,7 +12,7 @@
   header{display:flex;align-items:center;gap:12px;padding:6px 0}
   h1{font-size:18px;margin:0}
   .lead{color:var(--muted);font-size:13px;margin-top:4px}
-  /* MENU */
+
   #menuGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:10px}
   .card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
   .item-title{font-weight:700;margin:0 0 6px}
@@ -20,7 +20,7 @@
   .controls{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
   .qty{width:64px;padding:6px;border-radius:6px;border:1px solid #e4e6ea;text-align:center}
   .btn{background:var(--accent);color:#fff;border:0;padding:10px 12px;border-radius:8px;font-weight:700}
-  /* REVIEW PAGE */
+
   .hidden{display:none}
   #reviewHeader{display:flex;align-items:center;gap:10px;margin-bottom:10px}
   .backBtn{background:transparent;border:0;font-size:20px}
@@ -30,17 +30,17 @@
   .ri-right{text-align:right;min-width:110px}
   .qty-controls{display:flex;gap:6px;align-items:center;justify-content:flex-end}
   .small{font-size:13px;color:var(--muted)}
-  /* sticky bottom bar */
+
   .bottom-bar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:10px;border-top:1px solid #eee;box-shadow:0 -6px 18px rgba(0,0,0,.06)}
   .bar-inner{max-width:700px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px}
   .confirmBtn{background:var(--accent);color:#fff;padding:12px 18px;border-radius:8px;border:0;font-weight:700;width:270px}
   .totalText{font-weight:800}
-  /* responsive tweaks */
+
   @media (max-width:420px){
     .bar-inner{flex-direction:column;gap:8px}
     .confirmBtn{width:100%}
   }
-  /* small button styles inside review items */
+
   .smallBtn { background:transparent;border:0;color:#333;font-weight:700;font-size:16px;padding:6px 8px;border-radius:6px;cursor:pointer; }
   .removeBtn { color:#d00; font-size:14px; background:transparent;border:0; cursor:pointer; }
 </style>
@@ -48,7 +48,6 @@
 <body>
 <div class="wrap">
 
-  <!-- MENU PAGE -->
   <div id="menuPage">
     <header>
       <div>
@@ -70,7 +69,6 @@
     </div>
   </div>
 
-  <!-- REVIEW PAGE -->
   <div id="reviewPage" class="hidden">
     <div id="reviewHeader">
       <button class="backBtn" onclick="showMenuPage()">←</button>
@@ -87,26 +85,21 @@
 
 </div>
 
-<!-- STICKY BOTTOM BAR (shows on review page) -->
 <div id="bottomBar" class="bottom-bar hidden">
   <div class="bar-inner">
     <div>
       <div class="small">Total</div>
       <div id="reviewTotal" class="totalText">₹0</div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="confirmBtn" class="confirmBtn" onclick="confirmFinalOrder()">CONFIRM FINAL ORDER</button>
-    </div>
+    <button id="confirmBtn" class="confirmBtn" onclick="confirmFinalOrder()">CONFIRM FINAL ORDER</button>
   </div>
 </div>
 
 <script>
-/* ===== CONFIG ===== */
-const API_KEY = "956539c8c9e7053902668964f579be06"; // ImgBB
-const phoneNumber = "919373606511"; // Owner number (91XXXXXXXXXX)
+const API_KEY = "956539c8c9e7053902668964f579be06";
+const phoneNumber = "919373606511";
 const shopName = "Krish Fast Food";
 
-/* ===== MENU ITEMS ===== */
 const items = [
   {id:"1", name:"Margherita Pizza", price:129},
   {id:"2", name:"Paneer Tikka Pizza", price:229},
@@ -114,14 +107,11 @@ const items = [
   {id:"4", name:"Cold Coffee", price:79}
 ];
 
-/* ===== STATE ===== */
-let selected = {}; // id -> true/false
-let qtys = {};     // id -> number
+let selected = {};
+let qtys = {};
 
-/* ===== UTIL ===== */
 function $(id){ return document.getElementById(id); }
 
-/* ===== RENDER MENU ===== */
 function loadMenu(){
   const grid = $("menuGrid");
   let html = "";
@@ -141,42 +131,27 @@ function loadMenu(){
 loadMenu();
 
 function toggleItem(id){
-  const cb = $("cb_"+id);
-  selected[id] = cb.checked;
+  selected[id] = $("cb_"+id).checked;
   if(selected[id] && !qtys[id]) qtys[id]=1;
 }
 
 function onQtyChange(id, val){
-  let v = parseInt(val) || 1;
-  if(v < 1) v = 1;
-  qtys[id] = v;
+  qtys[id] = Math.max(1, parseInt(val) || 1);
 }
 
-/* ===== NAVIGATION ===== */
 function showReviewPage(){
-  // validate name/table
   const name = $("name_input").value.trim();
   const table = $("table_input").value.trim();
-  if(!name || !table){
-    alert("Please enter Name and Table/Delivery before reviewing.");
-    return;
-  }
+  if(!name || !table){ alert("Please enter Name and Table/Delivery before reviewing."); return; }
 
-  // collect ordered items
   const ordered = items.filter(i => selected[i.id]);
-  if(ordered.length === 0){
-    alert("Please select at least one item.");
-    return;
-  }
+  if(ordered.length === 0){ alert("Please select at least one item."); return; }
 
-  // show review
   $("menuPage").classList.add("hidden");
   $("reviewPage").classList.remove("hidden");
   $("bottomBar").classList.remove("hidden");
 
-  // set customer info
   $("customerInfo").innerText = `Customer: ${name} | ${table}`;
-
   renderReviewList();
   updateReviewTotal();
 }
@@ -185,21 +160,19 @@ function showMenuPage(){
   $("menuPage").classList.remove("hidden");
   $("reviewPage").classList.add("hidden");
   $("bottomBar").classList.add("hidden");
-  // re-render menu to reflect any changes
   loadMenu();
 }
 
-/* ===== REVIEW LIST RENDER ===== */
 function renderReviewList(){
   const list = $("reviewList");
   const ordered = items.filter(i => selected[i.id]);
+
   if(ordered.length === 0){
     $("emptyReview").classList.remove("hidden");
     list.innerHTML = "";
     return;
-  } else {
-    $("emptyReview").classList.add("hidden");
   }
+  $("emptyReview").classList.add("hidden");
 
   let html = "";
   ordered.forEach(i=>{
@@ -216,7 +189,7 @@ function renderReviewList(){
           <div style="min-width:28px;text-align:center">${q}</div>
           <button class="smallBtn" onclick="changeQty('${i.id}', 1)">+</button>
         </div>
-        <div style="margin-top:6px"><button class="removeBtn" onclick="removeItem('${i.id}')">Remove</button></div>
+        <button class="removeBtn" onclick="removeItem('${i.id}')">Remove</button>
       </div>
     </div>`;
   });
@@ -224,11 +197,8 @@ function renderReviewList(){
   list.innerHTML = html;
 }
 
-/* ===== REVIEW ACTIONS ===== */
 function changeQty(id, delta){
-  let v = (qtys[id] || 1) + delta;
-  if(v < 1) v = 1;
-  qtys[id] = v;
+  qtys[id] = Math.max(1, (qtys[id] || 1) + delta);
   renderReviewList();
   updateReviewTotal();
 }
@@ -238,9 +208,7 @@ function removeItem(id){
   delete qtys[id];
   renderReviewList();
   updateReviewTotal();
-  // If no items left, show menu automatically
-  const ordered = items.filter(i => selected[i.id]);
-  if(ordered.length === 0){
+  if(items.filter(i => selected[i.id]).length === 0){
     alert("No items left. Returning to menu.");
     showMenuPage();
   }
@@ -256,124 +224,109 @@ function updateReviewTotal(){
   $("reviewTotal").innerText = "₹" + total;
 }
 
-/* ===== BILL IMAGE GENERATION ===== */
 function generateBillImageDataURL(ordered, name, table, orderId){
   return new Promise(resolve => {
     let bill = `${shopName}\nOrder ID: #${orderId}\nCustomer: ${name}\nTable/Delivery: ${table}\n\nItems:\n`;
     let totalAmount = 0;
+
     ordered.forEach(i=>{
       const q = qtys[i.id] || 1;
       const lineTotal = q * i.price;
       bill += `${i.name} (x${q}) - ₹${lineTotal}\n`;
       totalAmount += lineTotal;
     });
+
     bill += `\nTotal Amount: ₹${totalAmount}\n\nThank you!`;
 
-    // canvas sizing
-    const width = 900;
-    const lineHeight = 36;
-    // estimate height based on number of lines
-    const lines = bill.split("\n");
-    const height = Math.max(400, (lines.length + 2) * lineHeight + 40);
-
     const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = 900;
+    canvas.height = 1000;
     const ctx = canvas.getContext("2d");
 
-    // background
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,900,1000);
 
-    // header
     ctx.fillStyle = "#000";
     ctx.font = "28px Arial";
     ctx.fillText(shopName, 20, 40);
-    ctx.font = "20px Arial";
-    ctx.fillText(`Order ID: #${orderId}`, 20, 76);
 
-    // body
+    ctx.font = "20px Arial";
+    ctx.fillText(`Order ID: #${orderId}`, 20, 80);
+
     ctx.font = "18px Arial";
-    let y = 120;
-    lines.slice(2).forEach(line=>{
+    const lines = bill.split("\n");
+    let y = 130;
+
+    lines.forEach(line=>{
       ctx.fillText(line, 20, y);
-      y += lineHeight;
+      y += 30;
     });
 
     resolve(canvas.toDataURL("image/png"));
   });
 }
 
-/* ===== UPLOAD TO ImgBB ===== */
 async function uploadToImgBB(base64DataURL){
-  // remove prefix
   const base64 = base64DataURL.split(",")[1];
   const form = new FormData();
   form.append("key", API_KEY);
   form.append("image", base64);
   const resp = await fetch("https://api.imgbb.com/1/upload", { method:"POST", body: form });
   const json = await resp.json();
-  if(json && json.success && json.data && json.data.url) return json.data.url;
+  if(json.success) return json.data.url;
   throw new Error("ImgBB upload failed");
 }
 
-/* ===== CONFIRM FINAL ORDER ===== */
 async function confirmFinalOrder(){
-  // gather
   const name = $("name_input").value.trim();
   const table = $("table_input").value.trim();
-  const ordered = items.filter(i => selected[i.id]);
-  if(ordered.length === 0){ alert("No items selected."); showMenuPage(); return; }
 
-  // generate orderId
+  const ordered = items.filter(i => selected[i.id]);
+  if(ordered.length === 0){ alert("No items selected."); return; }
+
   const orderId = Math.floor(10000 + Math.random()*90000);
 
-  // generate image
   try {
-    // show small waiting UI
-    const prevText = document.querySelector(".confirmBtn").innerText;
-    document.querySelector(".confirmBtn").innerText = "Processing...";
-    document.querySelector(".confirmBtn").disabled = true;
+    const btn = document.querySelector(".confirmBtn");
+    const prev = btn.innerText;
+    btn.innerText = "Processing...";
+    btn.disabled = true;
 
     const dataURL = await generateBillImageDataURL(ordered, name, table, orderId);
     const imageURL = await uploadToImgBB(dataURL);
 
-    // prepare order text for whatsapp (owner)
-    let orderLines = ordered.map(i => {
-        const q = qtys[i.id] || 1;
-        const lineTotal = i.price * q;
-        return `${i.name} x${q} - ₹${lineTotal}`;
+    let orderLines = ordered.map(i=>{
+      const q = qtys[i.id] || 1;
+      return `${i.name} x${q} - ₹${i.price*q}`;
     }).join("\n");
 
-    let finalText = 
+    let totalAmount = ordered.reduce((sum,i)=>{
+      const q = qtys[i.id] || 1;
+      return sum + i.price*q;
+    },0);
+
+    let finalText =
       `*${shopName}*\n` +
       `Order ID: #${orderId}\n\n` +
       `${orderLines}\n\n` +
+      `*Total: ₹${totalAmount}*\n\n` +
       `Customer: ${name}\n` +
       `Table/Delivery: ${table}\n\n` +
-      `Bill Image: ${imageURL}\n`;
+      `Bill Image: ${imageURL}`;
 
-    // URL ENCODE FIX 🔥 (important)
     let encodedText = encodeURIComponent(finalText);
+    window.open(`https://wa.me/${phoneNumber}?text=${encodedText}`,"_blank");
 
-    // Working WhatsApp redirect
-    const waLink = `https://wa.me/${phoneNumber}?text=${encodedText}`;
-    window.open(waLink, "_blank");
+    btn.innerText = prev;
+    btn.disabled = false;
 
-    // reset confirm UI
-    document.querySelector(".confirmBtn").innerText = prevText;
-    document.querySelector(".confirmBtn").disabled = false;
-
-    // Optional: clear selections after final confirm (so customer can't re-send same)
     selected = {};
     qtys = {};
     loadMenu();
     showMenuPage();
 
-    alert("Final order prepared. WhatsApp opened for sending. Owner will receive final order with bill image.");
-  } catch(err){
-    console.error(err);
-    alert("Failed to process order. Try again.");
+  } catch(e){
+    alert("Order failed. Try again.");
     document.querySelector(".confirmBtn").innerText = "CONFIRM FINAL ORDER";
     document.querySelector(".confirmBtn").disabled = false;
   }
