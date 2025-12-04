@@ -1,213 +1,383 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Krish Fast Food – Order Menu</title>
-
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Krish Fast Food — QR Menu (Review & Final)</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f6f6f6;
-        margin: 0;
-        padding: 0;
-    }
-    .container {
-        max-width: 500px;
-        margin: auto;
-        padding: 15px;
-    }
-    .item {
-        background: white;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        box-shadow: 0px 1px 4px rgba(0,0,0,0.1);
-    }
-    .item h3 {
-        margin: 0;
-    }
-    .qty-box {
-        width: 50px;
-        padding: 5px;
-        font-size: 16px;
-    }
-    #orderBtn {
-        background: #25D366;
-        padding: 15px;
-        color: white;
-        font-size: 18px;
-        border: none;
-        width: 100%;
-        border-radius: 8px;
-        margin-top: 20px;
-        cursor: pointer;
-    }
-    #orderBtn:disabled {
-        background: #9dd9b8;
-    }
-    .bill-img {
-        width: 100%;
-        border-radius: 10px;
-        margin-top: 10px;
-        display: none;
-    }
+  :root{--accent:#03c26f;--muted:#666;--card:#fff}
+  *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+  body{margin:0;background:#f4f6f8;color:#111}
+  .wrap{max-width:700px;margin:0 auto;padding:12px}
+  header{display:flex;align-items:center;gap:12px;padding:6px 0}
+  h1{font-size:18px;margin:0}
+  .lead{color:var(--muted);font-size:13px;margin-top:4px}
+  /* MENU */
+  #menuGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:10px}
+  .card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .item-title{font-weight:700;margin:0 0 6px}
+  .price{color:var(--accent);font-weight:800}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+  .qty{width:64px;padding:6px;border-radius:6px;border:1px solid #e4e6ea;text-align:center}
+  .btn{background:var(--accent);color:#fff;border:0;padding:10px 12px;border-radius:8px;font-weight:700}
+  /* REVIEW PAGE */
+  .hidden{display:none}
+  #reviewHeader{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .backBtn{background:transparent;border:0;font-size:20px}
+  .review-list{margin-top:8px}
+  .review-item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px;border-radius:8px;background:#fff;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .ri-left{flex:1}
+  .ri-right{text-align:right;min-width:110px}
+  .qty-controls{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+  .small{font-size:13px;color:var(--muted)}
+  /* sticky bottom bar */
+  .bottom-bar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:10px;border-top:1px solid #eee;box-shadow:0 -6px 18px rgba(0,0,0,.06)}
+  .bar-inner{max-width:700px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px}
+  .confirmBtn{background:var(--accent);color:#fff;padding:12px 18px;border-radius:8px;border:0;font-weight:700;width:270px}
+  .totalText{font-weight:800}
+  /* responsive tweaks */
+  @media (max-width:420px){
+    .bar-inner{flex-direction:column;gap:8px}
+    .confirmBtn{width:100%}
+  }
+  /* small button styles inside review items */
+  .smallBtn { background:transparent;border:0;color:#333;font-weight:700;font-size:16px;padding:6px 8px;border-radius:6px;cursor:pointer; }
+  .removeBtn { color:#d00; font-size:14px; background:transparent;border:0; cursor:pointer; }
 </style>
 </head>
-
 <body>
+<div class="wrap">
 
-<div class="container">
+  <!-- MENU PAGE -->
+  <div id="menuPage">
+    <header>
+      <div>
+        <h1>🍽 Krish Fast Food</h1>
+        <div class="lead">Scan • Select • Review • Confirm — Only final order sent to shop</div>
+      </div>
+    </header>
 
-<h2>🍽 Krish Fast Food – Quick Menu</h2>
+    <div id="menuGrid"></div>
 
-<div id="menuList"></div>
+    <div style="margin-top:12px" class="card">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="name_input" placeholder="Your Name" style="flex:1;padding:10px;border-radius:8px;border:1px solid #e6e6e6">
+        <input id="table_input" placeholder="Table / Delivery (e.g. Table 3 or Home)" style="flex:1;padding:10px;border-radius:8px;border:1px solid #e6e6e6">
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn" onclick="showReviewPage()">Review Order</button>
+      </div>
+    </div>
+  </div>
 
-<input id="custName" class="txt" placeholder="Your Name" style="width:100%;padding:10px;margin-top:15px;border-radius:8px;">
-<input id="custTable" class="txt" placeholder="Table / Delivery" style="width:100%;padding:10px;margin-top:10px;border-radius:8px;">
+  <!-- REVIEW PAGE -->
+  <div id="reviewPage" class="hidden">
+    <div id="reviewHeader">
+      <button class="backBtn" onclick="showMenuPage()">←</button>
+      <div>
+        <div style="font-weight:800">Review Your Order</div>
+        <div class="small">Krish Fast Food</div>
+        <div style="margin-top:6px" id="customerInfo" class="small"></div>
+      </div>
+    </div>
 
-<img id="billPreview" class="bill-img" />
-
-<button id="orderBtn" onclick="finalOrder()">Order on WhatsApp</button>
+    <div id="reviewList" class="review-list"></div>
+    <div id="emptyReview" class="small hidden">No items selected. Go back to menu.</div>
+  </div>
 
 </div>
 
-<script>
-/* ------------------------ CONFIG ------------------------ */
-const shopName = "Krish Fast Food";
-const phoneNumber = "9373606511";
-const imgbbKey = "956539c8c9e7053902668964f579be06";
+<!-- STICKY BOTTOM BAR (shows on review page) -->
+<div id="bottomBar" class="bottom-bar hidden">
+  <div class="bar-inner">
+    <div>
+      <div class="small">Total</div>
+      <div id="reviewTotal" class="totalText">₹0</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="confirmBtn" class="confirmBtn" onclick="confirmFinalOrder()">CONFIRM FINAL ORDER</button>
+    </div>
+  </div>
+</div>
 
-/* ------------------------ MENU ITEMS ------------------------ */
+<script>
+/* ===== CONFIG ===== */
+const API_KEY = "956539c8c9e7053902668964f579be06"; // ImgBB
+const phoneNumber = "919373606511"; // Owner number (91XXXXXXXXXX)
+const shopName = "Krish Fast Food";
+
+/* ===== MENU ITEMS ===== */
 const items = [
-    { id: 1, name: "Margherita Pizza", price: 129 },
-    { id: 2, name: "Paneer Tikka Pizza", price: 229 },
-    { id: 3, name: "Veg Burger", price: 69 },
-    { id: 4, name: "Cold Coffee", price: 79 }
+  {id:"1", name:"Margherita Pizza", price:129},
+  {id:"2", name:"Paneer Tikka Pizza", price:229},
+  {id:"3", name:"Veg Burger", price:69},
+  {id:"4", name:"Cold Coffee", price:79}
 ];
 
-let selected = {};
+/* ===== STATE ===== */
+let selected = {}; // id -> true/false
+let qtys = {};     // id -> number
 
-/* ------------------------ RENDER MENU ------------------------ */
-function renderMenu() {
-    let box = document.getElementById("menuList");
-    items.forEach(it => {
-        box.innerHTML += `
-            <div class="item">
-                <h3>${it.name} – ₹${it.price}</h3>
-                <label>
-                    <input type="checkbox" onchange="toggleItem(${it.id})"> Add
-                </label>
-                <input id="qty${it.id}" class="qty-box" type="number" value="1" min="1">
-            </div>
-        `;
-    });
+/* ===== UTIL ===== */
+function $(id){ return document.getElementById(id); }
+
+/* ===== RENDER MENU ===== */
+function loadMenu(){
+  const grid = $("menuGrid");
+  let html = "";
+  items.forEach(it=>{
+    if(qtys[it.id] === undefined) qtys[it.id] = 1;
+    html += `<div class="card">
+      <div class="item-title">${it.name}</div>
+      <div class="price">₹${it.price}</div>
+      <div class="controls">
+        <label><input type="checkbox" id="cb_${it.id}" ${selected[it.id] ? "checked" : ""} onchange="toggleItem('${it.id}')"> Add</label>
+        Qty: <input id="qty_${it.id}" class="qty" type="number" min="1" value="${qtys[it.id]}" onchange="onQtyChange('${it.id}', this.value)">
+      </div>
+    </div>`;
+  });
+  grid.innerHTML = html;
 }
-renderMenu();
+loadMenu();
 
-/* ------------------------ SELECT / UNSELECT ITEM ------------------------ */
-function toggleItem(id) {
-    let cb = event.target;
-    if (cb.checked) selected[id] = true;
-    else delete selected[id];
-}
-
-/* ------------------------ GENERATE BILL IMAGE ------------------------ */
-function generateBill() {
-    return new Promise(resolve => {
-        let total = 0;
-        let text = `${shopName}\n\n`;
-
-        for (let id in selected) {
-            let it = items.find(x => x.id == id);
-            let qty = parseInt(document.getElementById("qty" + id).value);
-            let line = qty * it.price;
-            total += line;
-            text += `${it.name}  x${qty}  = ₹${line}\n`;
-        }
-
-        text += `\n--------------------\nTotal: ₹${total}`;
-
-        // Create canvas
-        let canvas = document.createElement("canvas");
-        canvas.width = 800;
-        canvas.height = 600;
-        let ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, 800, 600);
-        ctx.fillStyle = "#000000";
-        ctx.font = "28px Arial";
-        text.split("\n").forEach((t, i) => {
-            ctx.fillText(t, 20, 40 + i * 35);
-        });
-
-        resolve(canvas.toDataURL("image/png"));
-    });
+function toggleItem(id){
+  const cb = $("cb_"+id);
+  selected[id] = cb.checked;
+  if(selected[id] && !qtys[id]) qtys[id]=1;
 }
 
-/* ------------------------ UPLOAD TO IMGBB ------------------------ */
-async function uploadToImgBB(base64) {
-    let form = new FormData();
-    form.append("image", base64.split(",")[1]);
-
-    let res = await fetch("https://api.imgbb.com/1/upload?key=" + imgbbKey, {
-        method: "POST",
-        body: form
-    });
-
-    let json = await res.json();
-    return json.data.url;
+function onQtyChange(id, val){
+  let v = parseInt(val) || 1;
+  if(v < 1) v = 1;
+  qtys[id] = v;
 }
 
-/* ------------------------ FINAL ORDER ------------------------ */
-async function finalOrder() {
-    if (Object.keys(selected).length === 0)
-        return alert("Please select at least 1 item.");
+/* ===== NAVIGATION ===== */
+function showReviewPage(){
+  // validate name/table
+  const name = $("name_input").value.trim();
+  const table = $("table_input").value.trim();
+  if(!name || !table){
+    alert("Please enter Name and Table/Delivery before reviewing.");
+    return;
+  }
 
-    let name = document.getElementById("custName").value.trim();
-    let table = document.getElementById("custTable").value.trim();
+  // collect ordered items
+  const ordered = items.filter(i => selected[i.id]);
+  if(ordered.length === 0){
+    alert("Please select at least one item.");
+    return;
+  }
 
-    if (!name || !table)
-        return alert("Enter Name & Table / Address.");
+  // show review
+  $("menuPage").classList.add("hidden");
+  $("reviewPage").classList.remove("hidden");
+  $("bottomBar").classList.remove("hidden");
 
-    let billImgBase64 = await generateBill();
-    document.getElementById("billPreview").src = billImgBase64;
-    document.getElementById("billPreview").style.display = "block";
+  // set customer info
+  $("customerInfo").innerText = `Customer: ${name} | ${table}`;
 
-    let imgURL = await uploadToImgBB(billImgBase64);
+  renderReviewList();
+  updateReviewTotal();
+}
 
-    let orderId = Math.floor(100000 + Math.random() * 900000);
+function showMenuPage(){
+  $("menuPage").classList.remove("hidden");
+  $("reviewPage").classList.add("hidden");
+  $("bottomBar").classList.add("hidden");
+  // re-render menu to reflect any changes
+  loadMenu();
+}
 
-    let orderedLines = "";
-    let total = 0;
+/* ===== REVIEW LIST RENDER ===== */
+function renderReviewList(){
+  const list = $("reviewList");
+  const ordered = items.filter(i => selected[i.id]);
+  if(ordered.length === 0){
+    $("emptyReview").classList.remove("hidden");
+    list.innerHTML = "";
+    return;
+  } else {
+    $("emptyReview").classList.add("hidden");
+  }
 
-    for (let id in selected) {
-        let it = items.find(x => x.id == id);
-        let qty = parseInt(document.getElementById("qty" + id).value);
-        let line = qty * it.price;
-        total += line;
-        orderedLines += `${it.name} x${qty} - ₹${line}\n`;
+  let html = "";
+  ordered.forEach(i=>{
+    const q = qtys[i.id] || 1;
+    html += `<div class="review-item" id="rev_${i.id}">
+      <div class="ri-left">
+        <div style="font-weight:800">${i.name}</div>
+        <div class="small">₹${i.price} each</div>
+      </div>
+      <div class="ri-right">
+        <div style="font-weight:800">₹${i.price * q}</div>
+        <div class="qty-controls" style="margin-top:6px">
+          <button class="smallBtn" onclick="changeQty('${i.id}', -1)">−</button>
+          <div style="min-width:28px;text-align:center">${q}</div>
+          <button class="smallBtn" onclick="changeQty('${i.id}', 1)">+</button>
+        </div>
+        <div style="margin-top:6px"><button class="removeBtn" onclick="removeItem('${i.id}')">Remove</button></div>
+      </div>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+/* ===== REVIEW ACTIONS ===== */
+function changeQty(id, delta){
+  let v = (qtys[id] || 1) + delta;
+  if(v < 1) v = 1;
+  qtys[id] = v;
+  renderReviewList();
+  updateReviewTotal();
+}
+
+function removeItem(id){
+  selected[id] = false;
+  delete qtys[id];
+  renderReviewList();
+  updateReviewTotal();
+  // If no items left, show menu automatically
+  const ordered = items.filter(i => selected[i.id]);
+  if(ordered.length === 0){
+    alert("No items left. Returning to menu.");
+    showMenuPage();
+  }
+}
+
+function updateReviewTotal(){
+  let total = 0;
+  items.forEach(i=>{
+    if(selected[i.id]){
+      total += (qtys[i.id] || 1) * i.price;
     }
+  });
+  $("reviewTotal").innerText = "₹" + total;
+}
 
-    let finalText =
-`*${shopName}*
-Order ID: #${orderId}
+/* ===== BILL IMAGE GENERATION ===== */
+function generateBillImageDataURL(ordered, name, table, orderId){
+  return new Promise(resolve => {
+    let bill = `${shopName}\nOrder ID: #${orderId}\nCustomer: ${name}\nTable/Delivery: ${table}\n\nItems:\n`;
+    let totalAmount = 0;
+    ordered.forEach(i=>{
+      const q = qtys[i.id] || 1;
+      const lineTotal = q * i.price;
+      bill += `${i.name} (x${q}) - ₹${lineTotal}\n`;
+      totalAmount += lineTotal;
+    });
+    bill += `\nTotal Amount: ₹${totalAmount}\n\nThank you!`;
 
-${orderedLines}
-*Total: ₹${total}*
+    // canvas sizing
+    const width = 900;
+    const lineHeight = 36;
+    // estimate height based on number of lines
+    const lines = bill.split("\n");
+    const height = Math.max(400, (lines.length + 2) * lineHeight + 40);
 
-Customer: ${name}
-Table/Delivery: ${table}
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
 
-Bill Image:
-${imgURL}
-`;
+    // background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    let encoded = encodeURIComponent(finalText);
-    window.open(`https://wa.me/${phoneNumber}?text=${encoded}`, "_blank");
+    // header
+    ctx.fillStyle = "#000";
+    ctx.font = "28px Arial";
+    ctx.fillText(shopName, 20, 40);
+    ctx.font = "20px Arial";
+    ctx.fillText(`Order ID: #${orderId}`, 20, 76);
+
+    // body
+    ctx.font = "18px Arial";
+    let y = 120;
+    lines.slice(2).forEach(line=>{
+      ctx.fillText(line, 20, y);
+      y += lineHeight;
+    });
+
+    resolve(canvas.toDataURL("image/png"));
+  });
+}
+
+/* ===== UPLOAD TO ImgBB ===== */
+async function uploadToImgBB(base64DataURL){
+  // remove prefix
+  const base64 = base64DataURL.split(",")[1];
+  const form = new FormData();
+  form.append("key", API_KEY);
+  form.append("image", base64);
+  const resp = await fetch("https://api.imgbb.com/1/upload", { method:"POST", body: form });
+  const json = await resp.json();
+  if(json && json.success && json.data && json.data.url) return json.data.url;
+  throw new Error("ImgBB upload failed");
+}
+
+/* ===== CONFIRM FINAL ORDER ===== */
+async function confirmFinalOrder(){
+  // gather
+  const name = $("name_input").value.trim();
+  const table = $("table_input").value.trim();
+  const ordered = items.filter(i => selected[i.id]);
+  if(ordered.length === 0){ alert("No items selected."); showMenuPage(); return; }
+
+  // generate orderId
+  const orderId = Math.floor(10000 + Math.random()*90000);
+
+  // generate image
+  try {
+    // show small waiting UI
+    const prevText = document.querySelector(".confirmBtn").innerText;
+    document.querySelector(".confirmBtn").innerText = "Processing...";
+    document.querySelector(".confirmBtn").disabled = true;
+
+    const dataURL = await generateBillImageDataURL(ordered, name, table, orderId);
+    const imageURL = await uploadToImgBB(dataURL);
+
+    // prepare order text for whatsapp (owner)
+    let orderLines = ordered.map(i => {
+        const q = qtys[i.id] || 1;
+        const lineTotal = i.price * q;
+        return `${i.name} x${q} - ₹${lineTotal}`;
+    }).join("\n");
+
+    let finalText = 
+      `*${shopName}*\n` +
+      `Order ID: #${orderId}\n\n` +
+      `${orderLines}\n\n` +
+      `Customer: ${name}\n` +
+      `Table/Delivery: ${table}\n\n` +
+      `Bill Image: ${imageURL}\n`;
+
+    // URL ENCODE FIX 🔥 (important)
+    let encodedText = encodeURIComponent(finalText);
+
+    // Working WhatsApp redirect
+    const waLink = `https://wa.me/${phoneNumber}?text=${encodedText}`;
+    window.open(waLink, "_blank");
+
+    // reset confirm UI
+    document.querySelector(".confirmBtn").innerText = prevText;
+    document.querySelector(".confirmBtn").disabled = false;
+
+    // Optional: clear selections after final confirm (so customer can't re-send same)
+    selected = {};
+    qtys = {};
+    loadMenu();
+    showMenuPage();
+
+    alert("Final order prepared. WhatsApp opened for sending. Owner will receive final order with bill image.");
+  } catch(err){
+    console.error(err);
+    alert("Failed to process order. Try again.");
+    document.querySelector(".confirmBtn").innerText = "CONFIRM FINAL ORDER";
+    document.querySelector(".confirmBtn").disabled = false;
+  }
 }
 </script>
-
 </body>
 </html>
-
